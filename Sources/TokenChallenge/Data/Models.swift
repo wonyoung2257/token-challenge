@@ -47,7 +47,6 @@ struct DailyUsage: Identifiable {
     var totalTokens: Int
     var byModel: [String: Int]
     var byHour: [Int: Int] // hour (0-23) -> tokens
-    var records: [TokenRecord]
 }
 
 struct ChallengeSettings: Codable, Equatable {

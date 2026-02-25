@@ -5,6 +5,23 @@ actor JSONLParser {
     private let decoder = JSONDecoder()
     private let claudeProjectsPath: String
 
+    // Reuse expensive formatter instances
+    private let isoFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    private let isoFallback: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    // Directory scan cache
+    private var cachedFileList: [String] = []
+    private var lastDirectoryScan: Date = .distantPast
+    private let directoryScanInterval: TimeInterval = 120 // re-scan every 2 minutes
+
     init() {
         self.claudeProjectsPath = (NSHomeDirectory() as NSString)
             .appendingPathComponent(".claude/projects")
@@ -26,14 +43,21 @@ actor JSONLParser {
     }
 
     private func findJSONLFiles(in directory: String) -> [String] {
+        let now = Date()
+        if now.timeIntervalSince(lastDirectoryScan) < directoryScanInterval,
+           !cachedFileList.isEmpty {
+            // Between full scans, just check if any new files appeared via quick attribute check
+            return cachedFileList
+        }
+
         let fm = FileManager.default
         var results: [String] = []
 
         guard let enumerator = fm.enumerator(
             at: URL(fileURLWithPath: directory),
-            includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey, .fileSizeKey],
+            includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
-        ) else { return [] }
+        ) else { return cachedFileList }
 
         while let url = enumerator.nextObject() as? URL {
             if url.pathExtension == "jsonl" {
@@ -41,6 +65,8 @@ actor JSONLParser {
             }
         }
 
+        cachedFileList = results
+        lastDirectoryScan = now
         return results
     }
 
@@ -51,42 +77,57 @@ actor JSONLParser {
               let fileSize = attrs[.size] as? UInt64
         else { return [] }
 
-        // Check cache
+        // Cache hit — file unchanged
         if let cached = fileCache[path],
            cached.modificationDate == modDate,
            cached.fileSize == fileSize {
             return cached.records
         }
 
-        // Parse fresh
-        guard let data = fm.contents(atPath: path),
-              let content = String(data: data, encoding: .utf8)
-        else { return [] }
+        // Incremental parse: if file grew (same mod path, bigger size), only read new bytes
+        let existingRecords: [TokenRecord]
+        let readOffset: UInt64
 
-        let lines = content.components(separatedBy: .newlines)
-        var records: [TokenRecord] = []
+        if let cached = fileCache[path], fileSize > cached.fileSize {
+            existingRecords = cached.records
+            readOffset = cached.fileSize
+        } else {
+            existingRecords = []
+            readOffset = 0
+        }
 
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoFallback = ISO8601DateFormatter()
-        isoFallback.formatOptions = [.withInternetDateTime]
+        guard let handle = FileHandle(forReadingAtPath: path) else {
+            return existingRecords
+        }
+        defer { handle.closeFile() }
 
-        for line in lines {
+        handle.seek(toFileOffset: readOffset)
+        let newData = handle.readDataToEndOfFile()
+
+        guard !newData.isEmpty,
+              let content = String(data: newData, encoding: .utf8)
+        else {
+            return existingRecords
+        }
+
+        var newRecords: [TokenRecord] = []
+
+        content.enumerateLines { line, _ in
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty,
                   let lineData = trimmed.data(using: .utf8)
-            else { continue }
+            else { return }
 
-            guard let entry = try? decoder.decode(JSONLEntry.self, from: lineData),
+            guard let entry = try? self.decoder.decode(JSONLEntry.self, from: lineData),
                   entry.type == "assistant",
                   let message = entry.message,
                   let usage = message.usage,
                   let timestampStr = entry.timestamp,
-                  let date = isoFormatter.date(from: timestampStr) ?? isoFallback.date(from: timestampStr)
-            else { continue }
+                  let date = self.isoFormatter.date(from: timestampStr) ?? self.isoFallback.date(from: timestampStr)
+            else { return }
 
             let total = usage.total
-            guard total > 0 else { continue }
+            guard total > 0 else { return }
 
             let record = TokenRecord(
                 timestamp: date,
@@ -96,16 +137,17 @@ actor JSONLParser {
                 cacheCreationTokens: usage.cache_creation_input_tokens ?? 0,
                 cacheReadTokens: usage.cache_read_input_tokens ?? 0
             )
-            records.append(record)
+            newRecords.append(record)
         }
 
-        // Update cache
+        let allRecords = existingRecords + newRecords
+
         fileCache[path] = FileCacheEntry(
             modificationDate: modDate,
             fileSize: fileSize,
-            records: records
+            records: allRecords
         )
 
-        return records
+        return allRecords
     }
 }

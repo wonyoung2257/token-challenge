@@ -127,10 +127,14 @@ struct L10n {
         return formatWithCommas(intPart) + ".\(fracPart)"
     }
 
+    private static let commaFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.groupingSeparator = ","
+        return f
+    }()
+
     private func formatWithCommas(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
+        Self.commaFormatter.string(from: NSNumber(value: n)) ?? "\(n)"
     }
 }

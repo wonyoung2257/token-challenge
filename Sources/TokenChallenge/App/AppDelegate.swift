@@ -27,13 +27,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             rootView: PopoverContentView(store: store)
         )
 
-        // Start data polling
-        store.startPolling()
-
-        // Observe store changes to update icon
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        // Update icon only when data changes
+        store.onDataChanged = { [weak self] in
             self?.updateMenuBarIcon()
         }
+
+        // Start data polling
+        store.startPolling()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
