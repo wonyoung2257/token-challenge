@@ -51,7 +51,7 @@ struct TodayView: View {
                         Text(shortModelName(model))
                             .font(.system(size: 12, design: .monospaced))
                         Spacer()
-                        Text(formatTokens(tokens))
+                        Text(store.l10n.formatCompact(tokens))
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
@@ -80,12 +80,4 @@ struct TodayView: View {
         return .gray
     }
 
-    private func formatTokens(_ count: Int) -> String {
-        if count >= 1_000_000 {
-            return String(format: "%.2fM", Double(count) / 1_000_000)
-        } else if count >= 1_000 {
-            return String(format: "%.1fK", Double(count) / 1_000)
-        }
-        return "\(count)"
-    }
 }

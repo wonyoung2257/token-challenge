@@ -83,7 +83,7 @@ struct SettingsView: View {
                         customGoal = "\(preset.rawValue)"
                         applyGoal(preset.rawValue)
                     } label: {
-                        Text(preset.label)
+                        Text(store.l10n.formatPreset(preset.rawValue))
                             .font(.system(size: 12, weight: .medium))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 6)

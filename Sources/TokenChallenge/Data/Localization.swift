@@ -26,7 +26,7 @@ struct L10n {
     var byModel: String { lang == .ko ? "모델별" : "By Model" }
     var noDataYet: String { lang == .ko ? "데이터 없음" : "No data yet" }
     func tokens(_ count: Int) -> String {
-        "/ \(formatNumber(count)) \(lang == .ko ? "토큰" : "tokens")"
+        "/ \(formatFull(count)) \(lang == .ko ? "토큰" : "tokens")"
     }
     func dayStreak(_ n: Int) -> String {
         lang == .ko ? "\(n)일 연속" : "\(n) day streak"
@@ -63,8 +63,71 @@ struct L10n {
     var language: String { lang == .ko ? "언어" : "Language" }
     var quitApp: String { lang == .ko ? "TokenChallenge 종료" : "Quit TokenChallenge" }
 
-    // MARK: - Helpers
-    private func formatNumber(_ n: Int) -> String {
+    // MARK: - Number Formatting
+
+    /// Compact format for menu bar, model breakdown, chart axes
+    func formatCompact(_ n: Int) -> String {
+        switch lang {
+        case .en:
+            if n >= 1_000_000 {
+                let s = String(format: "%.1f", Double(n) / 1_000_000)
+                return (s.hasSuffix(".0") ? String(s.dropLast(2)) : s) + "M"
+            } else if n >= 1_000 {
+                let s = String(format: "%.1f", Double(n) / 1_000)
+                return (s.hasSuffix(".0") ? String(s.dropLast(2)) : s) + "K"
+            }
+            return formatWithCommas(n)
+        case .ko:
+            return formatKorean(n)
+        }
+    }
+
+    /// Full format for counter display and goal labels
+    func formatFull(_ n: Int) -> String {
+        switch lang {
+        case .en:
+            return formatWithCommas(n)
+        case .ko:
+            return formatKorean(n)
+        }
+    }
+
+    /// Preset button labels (compact, no commas)
+    func formatPreset(_ n: Int) -> String {
+        switch lang {
+        case .en:
+            if n >= 1_000_000 { return "\(n / 1_000_000)M" }
+            if n >= 1_000 { return "\(n / 1_000)K" }
+            return "\(n)"
+        case .ko:
+            if n >= 100_000_000 { return "\(n / 100_000_000)억" }
+            if n >= 10_000 { return "\(n / 10_000)만" }
+            return "\(n)"
+        }
+    }
+
+    // MARK: - Private Helpers
+
+    private func formatKorean(_ n: Int) -> String {
+        if n >= 100_000_000 {
+            return formatKoreanDecimal(Double(n) / 100_000_000) + "억"
+        } else if n >= 10_000 {
+            return formatKoreanDecimal(Double(n) / 10_000) + "만"
+        }
+        return formatWithCommas(n)
+    }
+
+    private func formatKoreanDecimal(_ val: Double) -> String {
+        let rounded = (val * 10).rounded() / 10
+        if rounded == Double(Int(rounded)) {
+            return formatWithCommas(Int(rounded))
+        }
+        let intPart = Int(rounded)
+        let fracPart = Int(((rounded - Double(intPart)) * 10).rounded())
+        return formatWithCommas(intPart) + ".\(fracPart)"
+    }
+
+    private func formatWithCommas(_ n: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = ","

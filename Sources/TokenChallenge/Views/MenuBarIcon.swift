@@ -8,10 +8,10 @@ enum MenuBarIcon {
             let ctx = NSGraphicsContext.current!.cgContext
             let center = CGPoint(x: rect.midX, y: rect.midY)
             let radius: CGFloat = 7.5
-            let lineWidth: CGFloat = 2.0
+            let lineWidth: CGFloat = 3.0
 
             // Background circle
-            ctx.setStrokeColor(NSColor.tertiaryLabelColor.cgColor)
+            ctx.setStrokeColor(NSColor.systemGray.withAlphaComponent(0.3).cgColor)
             ctx.setLineWidth(lineWidth)
             ctx.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
             ctx.strokePath()
@@ -36,7 +36,7 @@ enum MenuBarIcon {
                 let startAngle = CGFloat.pi / 2
                 let endAngle = startAngle - CGFloat(progress) * 2 * .pi
 
-                ctx.setStrokeColor(NSColor.controlAccentColor.cgColor)
+                ctx.setStrokeColor(NSColor.white.cgColor)
                 ctx.setLineWidth(lineWidth)
                 ctx.setLineCap(.round)
                 ctx.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)

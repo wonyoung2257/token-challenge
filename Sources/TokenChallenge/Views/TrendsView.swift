@@ -64,7 +64,7 @@ struct TrendsView: View {
                     AxisGridLine()
                     AxisValueLabel {
                         if let intVal = value.as(Int.self) {
-                            Text(shortTokenLabel(intVal))
+                            Text(store.l10n.formatCompact(intVal))
                         }
                     }
                 }
@@ -107,7 +107,7 @@ struct TrendsView: View {
                     AxisGridLine()
                     AxisValueLabel {
                         if let intVal = value.as(Int.self) {
-                            Text(shortTokenLabel(intVal))
+                            Text(store.l10n.formatCompact(intVal))
                         }
                     }
                 }
@@ -206,9 +206,4 @@ struct TrendsView: View {
         }.sorted { $0.tokens > $1.tokens }
     }
 
-    private func shortTokenLabel(_ value: Int) -> String {
-        if value >= 1_000_000 { return "\(value / 1_000_000)M" }
-        if value >= 1_000 { return "\(value / 1_000)K" }
-        return "\(value)"
-    }
 }

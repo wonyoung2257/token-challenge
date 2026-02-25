@@ -83,13 +83,4 @@ enum GoalPreset: Int, CaseIterable, Identifiable {
     case fiftyM = 50_000_000
 
     var id: Int { rawValue }
-
-    var label: String {
-        switch self {
-        case .fiveM: return "5M"
-        case .tenM: return "10M"
-        case .twentyM: return "20M"
-        case .fiftyM: return "50M"
-        }
-    }
 }

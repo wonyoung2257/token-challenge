@@ -58,18 +58,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         statusItem.button?.image = image
 
-        let formatted = formatTokens(store.todayTokens)
+        let formatted = store.l10n.formatCompact(store.todayTokens)
         statusItem.button?.title = " \(formatted)"
         statusItem.button?.imagePosition = .imageLeading
-    }
-
-    private func formatTokens(_ count: Int) -> String {
-        if count >= 1_000_000 {
-            return String(format: "%.1fM", Double(count) / 1_000_000)
-        } else if count >= 1_000 {
-            return String(format: "%.0fK", Double(count) / 1_000)
-        } else {
-            return "\(count)"
-        }
     }
 }
