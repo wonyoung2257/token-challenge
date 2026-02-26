@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     let store: TokenDataStore
+    @StateObject private var updateChecker = UpdateChecker()
     @State private var selectedPreset: GoalPreset? = nil
     @State private var customGoal: String = ""
     @State private var resetHour: Int = 15
@@ -30,6 +31,18 @@ struct SettingsView: View {
 
                 // Streak
                 streakSection
+
+                Divider()
+                    .padding(.horizontal, 20)
+
+                // Update
+                updateSection
+
+                Divider()
+                    .padding(.horizontal, 20)
+
+                // Quit
+                quitSection
             }
             .padding(.vertical, 12)
         }
@@ -164,25 +177,6 @@ struct SettingsView: View {
                 .foregroundStyle(.red)
             }
             .padding(.horizontal, 20)
-
-            // Quit button
-            Divider()
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-
-            Button {
-                NSApplication.shared.terminate(nil)
-            } label: {
-                HStack {
-                    Image(systemName: "power")
-                    Text(store.l10n.quitApp)
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
         }
         .alert(store.l10n.resetStreakQuestion, isPresented: $showResetAlert) {
             Button(store.l10n.cancel, role: .cancel) {}
@@ -195,6 +189,84 @@ struct SettingsView: View {
         } message: {
             Text(store.l10n.resetStreakMessage)
         }
+    }
+
+    // MARK: - Update Section
+
+    @ViewBuilder
+    private var updateSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(store.l10n.update)
+                .font(.system(size: 13, weight: .semibold))
+                .padding(.horizontal, 20)
+
+            HStack {
+                Text(store.l10n.currentVersion(updateChecker.currentVersion))
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                switch updateChecker.status {
+                case .idle, .error:
+                    Button(store.l10n.checkForUpdates) {
+                        Task { await updateChecker.checkForUpdates() }
+                    }
+                    .font(.system(size: 12))
+
+                case .checking:
+                    HStack(spacing: 4) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(store.l10n.checking)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+
+                case .upToDate:
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.system(size: 12))
+                        Text(store.l10n.upToDate)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+
+                case let .available(version, url):
+                    Button {
+                        NSWorkspace.shared.open(url)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .foregroundStyle(.blue)
+                            Text(store.l10n.updateAvailable(version))
+                        }
+                        .font(.system(size: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+
+    // MARK: - Quit Section
+
+    @ViewBuilder
+    private var quitSection: some View {
+        Button {
+            NSApplication.shared.terminate(nil)
+        } label: {
+            HStack {
+                Image(systemName: "power")
+                Text(store.l10n.quitApp)
+            }
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Helpers

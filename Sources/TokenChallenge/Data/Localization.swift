@@ -63,6 +63,18 @@ struct L10n {
     var language: String { lang == .ko ? "언어" : "Language" }
     var quitApp: String { lang == .ko ? "TokenChallenge 종료" : "Quit TokenChallenge" }
 
+    // MARK: - Update
+    var update: String { lang == .ko ? "업데이트" : "Update" }
+    var checkForUpdates: String { lang == .ko ? "업데이트 확인" : "Check for Updates" }
+    var checking: String { lang == .ko ? "확인 중..." : "Checking..." }
+    var upToDate: String { lang == .ko ? "최신 버전입니다" : "Up to date" }
+    func updateAvailable(_ version: String) -> String {
+        lang == .ko ? "v\(version) 업데이트 가능" : "Update available: v\(version)"
+    }
+    func currentVersion(_ version: String) -> String {
+        lang == .ko ? "현재 v\(version)" : "Current: v\(version)"
+    }
+
     // MARK: - Number Formatting
 
     /// Compact format for menu bar, model breakdown, chart axes
