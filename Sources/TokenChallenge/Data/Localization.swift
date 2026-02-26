@@ -74,6 +74,10 @@ struct L10n {
     func currentVersion(_ version: String) -> String {
         lang == .ko ? "현재 v\(version)" : "Current: v\(version)"
     }
+    var updating: String { lang == .ko ? "업데이트 중..." : "Updating..." }
+    func brewUpdate(_ version: String) -> String {
+        lang == .ko ? "v\(version) 업데이트" : "Update to v\(version)"
+    }
 
     // MARK: - Number Formatting
 

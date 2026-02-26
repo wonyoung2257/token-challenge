@@ -234,17 +234,40 @@ struct SettingsView: View {
                     }
 
                 case let .available(version, url):
-                    Button {
-                        NSWorkspace.shared.open(url)
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.up.circle.fill")
-                                .foregroundStyle(.blue)
-                            Text(store.l10n.updateAvailable(version))
+                    if updateChecker.isBrewInstalled {
+                        Button {
+                            updateChecker.performBrewUpgrade()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .foregroundStyle(.blue)
+                                Text(store.l10n.brewUpdate(version))
+                            }
+                            .font(.system(size: 12))
                         }
-                        .font(.system(size: 12))
+                        .buttonStyle(.plain)
+                    } else {
+                        Button {
+                            NSWorkspace.shared.open(url)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .foregroundStyle(.blue)
+                                Text(store.l10n.updateAvailable(version))
+                            }
+                            .font(.system(size: 12))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+
+                case .updating:
+                    HStack(spacing: 4) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(store.l10n.updating)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .padding(.horizontal, 20)
