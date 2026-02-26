@@ -59,7 +59,8 @@ final class TokenDataStore {
         let old = settings
         settings = newSettings
         PersistenceManager.saveSettings(settings)
-        if newSettings.dailyGoal != old.dailyGoal || newSettings.resetHourUTC != old.resetHourUTC || newSettings.language != old.language {
+        onDataChanged?()
+        if newSettings.dailyGoal != old.dailyGoal || newSettings.resetHourUTC != old.resetHourUTC {
             Task { await refresh() }
         }
     }
