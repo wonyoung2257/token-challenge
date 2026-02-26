@@ -207,70 +207,54 @@ struct SettingsView: View {
 
                 Spacer()
 
-                switch updateChecker.status {
-                case .idle, .error:
-                    Button(store.l10n.checkForUpdates) {
-                        Task { await updateChecker.checkForUpdates() }
-                    }
-                    .font(.system(size: 12))
-
-                case .checking:
-                    HStack(spacing: 4) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text(store.l10n.checking)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-
-                case .upToDate:
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.system(size: 12))
-                        Text(store.l10n.upToDate)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-
-                case let .available(version, url):
-                    if updateChecker.isBrewInstalled {
-                        Button {
-                            updateChecker.performBrewUpgrade()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .foregroundStyle(.blue)
-                                Text(store.l10n.brewUpdate(version))
-                            }
-                            .font(.system(size: 12))
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Button {
-                            NSWorkspace.shared.open(url)
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.up.circle.fill")
-                                    .foregroundStyle(.blue)
-                                Text(store.l10n.updateAvailable(version))
-                            }
-                            .font(.system(size: 12))
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                case .updating:
-                    HStack(spacing: 4) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text(store.l10n.updating)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                updateStatusView
             }
             .padding(.horizontal, 20)
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatusView: some View {
+        if case let .available(version, url) = updateChecker.status {
+            Button {
+                if updateChecker.isBrewInstalled {
+                    updateChecker.performBrewUpgrade()
+                } else {
+                    NSWorkspace.shared.open(url)
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundStyle(.blue)
+                    Text(updateChecker.isBrewInstalled
+                        ? store.l10n.brewUpdate(version)
+                        : store.l10n.updateAvailable(version))
+                }
+                .font(.system(size: 12))
+            }
+            .buttonStyle(.plain)
+        } else if updateChecker.status == .checking || updateChecker.status == .updating {
+            HStack(spacing: 4) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(updateChecker.status == .checking ? store.l10n.checking : store.l10n.updating)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+        } else if updateChecker.status == .upToDate {
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .font(.system(size: 12))
+                Text(store.l10n.upToDate)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Button(store.l10n.checkForUpdates) {
+                Task { await updateChecker.checkForUpdates() }
+            }
+            .font(.system(size: 12))
         }
     }
 

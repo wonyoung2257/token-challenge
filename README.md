@@ -10,6 +10,7 @@ A macOS menu bar app that tracks your daily Claude Code token usage and helps yo
 - **Trends & charts** — Daily bar chart, hourly usage pattern, and model distribution (donut chart)
 - **Per-model breakdown** — See usage split across Opus, Sonnet, Haiku, etc.
 - **Localization** — English and Korean (한국어) supported
+- **Update checker** — Check for updates and upgrade via Homebrew from the Settings tab
 - **Lightweight** — Pure Swift, no external dependencies, runs as a menu bar accessory
 
 ## Install
@@ -19,17 +20,6 @@ A macOS menu bar app that tracks your daily Claude Code token usage and helps yo
 ```bash
 brew tap wonyoung2257/token-challenge
 brew install --cask token-challenge
-```
-
-Since the app is not code-signed, macOS will block it on first launch. To allow it:
-
-1. Open **System Settings → Privacy & Security**
-2. Scroll down and click **"Open Anyway"**
-
-Or run:
-
-```bash
-xattr -d com.apple.quarantine /Applications/TokenChallenge.app
 ```
 
 ### Build from source
