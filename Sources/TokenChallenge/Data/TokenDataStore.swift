@@ -155,12 +155,18 @@ final class TokenDataStore {
     // MARK: - Day Boundary Helpers
 
     static func logicalDay(for date: Date, resetHourUTC: Int, utcCalendar: Calendar) -> Date {
+        guard resetHourUTC > 0 else {
+            return utcCalendar.startOfDay(for: date)
+        }
         let utcHour = utcCalendar.component(.hour, from: date)
-        let shifted = utcHour < resetHourUTC
-            ? utcCalendar.date(byAdding: .day, value: -1, to: date)!
-            : date
-
-        return utcCalendar.startOfDay(for: shifted)
+        if utcHour >= resetHourUTC {
+            // At/after reset hour: new day has started → belongs to next UTC date
+            let next = utcCalendar.date(byAdding: .day, value: 1, to: date)!
+            return utcCalendar.startOfDay(for: next)
+        } else {
+            // Before reset hour: still the current UTC date's logical day
+            return utcCalendar.startOfDay(for: date)
+        }
     }
 
     static func dayKey(for date: Date, utcCalendar: Calendar) -> String {
