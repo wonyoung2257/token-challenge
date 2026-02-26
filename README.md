@@ -18,8 +18,7 @@ A macOS menu bar app that tracks your daily Claude Code token usage and helps yo
 ### Homebrew (recommended)
 
 ```bash
-brew tap wonyoung2257/token-challenge
-brew install --cask token-challenge
+brew install --cask wonyoung2257/token-challenge/token-challenge
 ```
 
 ### Build from source
